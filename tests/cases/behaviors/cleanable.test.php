@@ -162,7 +162,7 @@ class CleanableTestCase extends AppTestCase {
 		$this->AssertEqual($response, $expected);
 		// clean URL Encoded HTML/images/scripts/iframes
 		$bad = 'good%3CScRipT%20%3Ealert%28%27test%27%29%3B%3C%2FScRipT%20%3E%3CScRipT%20%3Ealert%28%27test%27%29%3B%3C%2FScRipT%20%3E%22%3E%27%3E%3CIfRaME%3Estuff';
-		$expected = 'good">\\\'>stuff';
+		$expected = 'good">\'>stuff';
 		$options['stripHtml'] = true;
 		$response = $this->Util->Behaviors->Cleanable->doCleanValue($bad, $options);
 		$this->AssertEqual($response, $expected);
@@ -177,7 +177,7 @@ class CleanableTestCase extends AppTestCase {
 		$this->AssertEqual($response, $expected);
 		$options['encode'] = true;
 		$response = $this->Util->Behaviors->Cleanable->doCleanValue($bad, $options);
-		$expected = 'good&quot;&gt;\&#039;&gt;stuff';
+		$expected = 'good&quot;&gt;&#039;&gt;stuff';
 		$this->AssertEqual($response, $expected);
 	}
 	/*  */
