@@ -106,13 +106,20 @@ class CleanableBehavior extends ModelBehavior{
 	*/
 	public function doFormat(&$Model, $data, $settings=null) {
 		$settings = $this->settings($Model, $settings);
-		if (!array_key_exists($Model->alias, $data)) {
+		if (!array_key_exists($Model->alias, $data) && Set::countDim($data)==1) {
 			$data = array($Model->alias => $data);
 		}
 		// reformat HABTM data so you can save via saveAll()
-		foreach ( $Model->hasAndBelongsToMany as $modelAlias => $habtmSettings ) { 
+		foreach ( $Model->hasAndBelongsToMany as $modelAlias => $habtmSettings ) {
 			if (array_key_exists($modelAlias, $data) && !array_key_exists($modelAlias, $data[$modelAlias])) {
-				$primaryKeys = set::extract($data[$modelAlias], "/{$habtmSettings['associationForeignKey']}");
+				if (isset($Model->$modelAlias->primaryKey)) {
+					$primaryKeys = set::extract($data[$modelAlias], "/{$Model->$modelAlias->primaryKey}");
+				} else {
+					$primaryKeys = set::extract($data[$modelAlias], "/{$habtmSettings['associationForeignKey']}");
+				}
+				if (empty($primaryKeys)) {
+					$primaryKeys = set::extract($data[$modelAlias], "/id");
+				}
 				$data[$modelAlias][$modelAlias] = $primaryKeys;
 			}
 		}
@@ -150,7 +157,7 @@ class CleanableBehavior extends ModelBehavior{
 				$value = $_data;
 				unset($data[$field]);
 				$options = $this->determineCleanOptions($field, $settings, $schema);
-				$field = $this->doCleanValue($field, $options);
+				$field = $this->doCleanValue($field, $settings['clean_default']);
 				$data[$field] = $this->doCleanValue($value, $options);
 			}
 		}

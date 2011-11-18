@@ -12,7 +12,7 @@ class CleanableTestCase extends AppTestCase {
 	* @access public
 	*/
 	public function startTest($method) {
-		$this->Util =& ClassRegistry::init('Util');
+		$this->Util = ClassRegistry::init('Util');
 		$this->Util->bindModel(array(
 			'hasMany' => array(
 				'UtilHasMany1' => array(
