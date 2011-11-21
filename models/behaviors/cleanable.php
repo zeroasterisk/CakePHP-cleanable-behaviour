@@ -221,7 +221,9 @@ class CleanableBehavior extends ModelBehavior{
 			}
 			return $value;
 		}
+		$value = str_replace('+', '[|#|#plus#|#|]', $value);
 		$value = trim(urldecode(trim($value)));
+		$value = str_replace('[|#|#plus#|#|]', '+', $value);
 		if (!class_exists('Sanitize')) {
 			App::import('Core', 'Sanitize');
 		}
