@@ -202,10 +202,10 @@ class CleanableBehavior extends ModelBehavior{
 			return $value;
 		}
 		if ($options['numbersOnly']) {
-			return preg_replace('/[^0-9]/is', '', $value);
+			return preg_replace('/[^0-9\-]/is', '', $value);
 		}
 		if ($options['numbersAndPeriodOnly']) {
-			return preg_replace('/[^0-9\.]/is', '', $value);
+			return preg_replace('/[^0-9\-\.]/is', '', $value);
 		}
 		if (empty($value) && $options['nullIfEmpty']) {
 			return null;
