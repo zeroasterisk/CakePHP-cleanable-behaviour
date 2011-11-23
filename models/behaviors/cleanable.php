@@ -17,8 +17,8 @@ class CleanableBehavior extends ModelBehavior{
 		'doClean' => true,
 		'doFormat' => true,
 		'clean_default' => array(), # will merge with $this->clean_default
-		'clean_text' => array('stripHtml' => false, 'remove_html' => false, 'encode' => false),
-		'clean_blob' => array('stripHtml' => false, 'remove_html' => false, 'encode' => false),
+		'clean_text' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
+		'clean_blob' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
 		'clean_string' => array(),
 		'clean_date' => array('nullIfEmpty' => true),
 		'clean_datetime' => array('nullIfEmpty' => true),
@@ -26,8 +26,8 @@ class CleanableBehavior extends ModelBehavior{
 		'clean_float' => array('numbersAndPeriodOnly' => true),
 		// example of field name specific cleanup
 		'id' => array(),
-		'html' => array('stripHtml' => false),
-		'body' => array('stripHtml' => false),
+		'html' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
+		'body' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
 		);
 	var $clean_default = array(
 		'ignore' => false, 
