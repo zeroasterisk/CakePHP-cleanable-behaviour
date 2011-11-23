@@ -17,8 +17,8 @@ class CleanableBehavior extends ModelBehavior{
 		'doClean' => true,
 		'doFormat' => true,
 		'clean_default' => array(), # will merge with $this->clean_default
-		'clean_text' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
-		'clean_blob' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
+		'clean_text' => array('stripImages' => false, 'stripHtml' => false),
+		'clean_blob' => array('stripImages' => false, 'stripHtml' => false),
 		'clean_string' => array(),
 		'clean_date' => array('nullIfEmpty' => true),
 		'clean_datetime' => array('nullIfEmpty' => true),
@@ -26,8 +26,8 @@ class CleanableBehavior extends ModelBehavior{
 		'clean_float' => array('numbersAndPeriodOnly' => true),
 		// example of field name specific cleanup
 		'id' => array(),
-		'html' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
-		'body' => array('stripImages' => false, 'stripHtml' => false, 'remove_html' => false, 'encode' => false),
+		'html' => array('stripImages' => false, 'stripHtml' => false),
+		'body' => array('stripImages' => false, 'stripHtml' => false),
 		);
 	var $clean_default = array(
 		'ignore' => false, 
@@ -42,13 +42,15 @@ class CleanableBehavior extends ModelBehavior{
 		'stripHtml' => true,
 		'clean' => true, #all options below are clean Options
 		'odd_spaces' => true, 
-		'encode' => null, #calculated based on HTML settings 
 		'dollar' => false, 
 		'carriage' => false, 
 		'unicode' => true, 
 		'escape' => false, 
-		'backslash' => false, 
-		'remove_html' => true,
+		'backslash' => false,
+		# set to false, because it's too distructive
+		# use stripHtml instead
+		'encode' => false,
+		'remove_html' => false,
 		);
 	/**
 	* Convenience function for coordinating the settings array
@@ -233,7 +235,8 @@ class CleanableBehavior extends ModelBehavior{
 			$value = Sanitize::stripWhitespace($value);
 		}
 		if ($options['stripScripts']) {
-			$value = Sanitize::stripScripts($value);
+			# not using Sanitize::stripScripts() because it's also stripping images
+			$value = preg_replace('/(<link[^>]+rel="[^"]*stylesheet"[^>]*>|<style="[^"]*")|<script[^>]*>.*?<\/script>|<style[^>]*>.*?<\/style>|<!--.*?-->/is', '', $value);
 		}
 		if ($options['stripIframes']) {
 			$value = preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $value);
@@ -245,12 +248,6 @@ class CleanableBehavior extends ModelBehavior{
 		if ($options['stripHtml']) {
 			$value = preg_replace('/<[^>]*?>.*?<\/[^>]*?>/is', '', $value);
 			$value = preg_replace('/<[^>]*?>/is', '', $value);
-			$options['remove_html'] = true;
-		} else {
-			$options['remove_html'] = false;
-		}
-		if ($options['encode']===null) {
-			$options['encode'] = $options['remove_html'];
 		}
 		if ($options['clean']) {
 			$value = Sanitize::clean($value, $options);
