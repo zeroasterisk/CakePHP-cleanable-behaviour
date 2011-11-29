@@ -152,9 +152,9 @@ class CleanableBehavior extends ModelBehavior{
 			if ($modelName==$Model->alias) {
 				// clean on this models (main functionality)
 				$data[$modelName] = $this->doClean($Model, $_data, $settings);
-			} elseif (isset($Model->modelName) && is_object($Model->modelName) && is_array($_data)) {
+			} elseif (isset($Model->$modelName) && is_object($Model->$modelName) && is_array($_data)) {
 				// clean on other models
-				$data[$modelName] = $this->doClean($Model->modelName, $_data, $settings);
+				$data[$modelName] = $this->doClean($Model->$modelName, $_data, $settings);
 			} elseif (is_array($_data)) {
 				// clean on nested data as arrays
 				foreach ( $_data as $field => $value ) {
