@@ -108,9 +108,17 @@ class CleanableBehavior extends ModelBehavior{
 	*/
 	public function doFormat(&$Model, $data, $settings=null) {
 		$settings = $this->settings($Model, $settings);
-		if (!array_key_exists($Model->alias, $data) && Set::countDim($data)==1) {
-			$data = array($Model->alias => $data);
+		// shuffle core data to properly nest
+		$coreData = array();
+		if (array_key_exists($Model->alias, $data)) {
+			$coreData = $data[$Model->alias];
+			unset($data[$Model->alias]);
 		}
+		if (Set::countDim($data)==1) {
+			$coreData = array_merge($data, $coreData);
+			$data = array();
+		}
+		$data[$Model->alias] = $coreData;
 		// reformat HABTM data so you can save via saveAll()
 		foreach ( $Model->hasAndBelongsToMany as $modelAlias => $habtmSettings ) {
 			if (array_key_exists($modelAlias, $data) && !array_key_exists($modelAlias, $data[$modelAlias])) {
