@@ -143,6 +143,9 @@ class CleanableBehavior extends ModelBehavior{
 	* @return array $data
 	*/
 	public function doClean(&$Model, $data, $settings=null) {
+		if (!is_array($data) || empty($data)) {
+			return $data;
+		}
 		$settings = $this->settings($Model, $settings);
 		$schema = $Model->schema();
 		foreach ( $data as $modelName => $_data ) {
