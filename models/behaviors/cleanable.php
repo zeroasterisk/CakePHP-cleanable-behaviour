@@ -34,6 +34,7 @@ class CleanableBehavior extends ModelBehavior{
 		'numbersOnly' => false,
 		'numbersAndPeriodOnly' => false,
 		'nullIfEmpty' => false,
+		'zeroIfEmpty' => false, #autoset if field!=null && type=int
 		'emptyStringIfNull' => false, #autoset if field!=null
 		'stripWhitespace' => true, 
 		'stripScripts' => true, 
@@ -194,6 +195,9 @@ class CleanableBehavior extends ModelBehavior{
 			}
 			if (array_key_exists('null', $schema[$field])) {
 				$options['emptyStringIfNull'] = empty($schema[$field]['null']);
+				if (array_key_exists('type', $schema[$field]) && $schema[$field]['type'] == 'integer') {
+					$options['zeroIfEmpty'] = true;
+				}
 			}
 		}
 		if (array_key_exists($field, $settings) && is_array($settings[$field])) {
@@ -215,15 +219,17 @@ class CleanableBehavior extends ModelBehavior{
 			return $value;
 		}
 		if ($options['numbersOnly']) {
-			return preg_replace('/[^0-9\-]/is', '', $value);
-		}
-		if ($options['numbersAndPeriodOnly']) {
-			return preg_replace('/[^0-9\-\.]/is', '', $value);
+			$value = preg_replace('/[^0-9\-]/is', '', $value);
+		} elseif ($options['numbersAndPeriodOnly']) {
+			$value = preg_replace('/[^0-9\-\.]/is', '', $value);
 		}
 		if (empty($value) && $options['nullIfEmpty']) {
 			return null;
 		}
-		if (empty($value) || is_int($value) || is_float($value)) {
+		if (empty($value) && $options['zeroIfEmpty']) {
+			return 0;
+		}
+		if (empty($value) || is_int($value) || is_float($value) || $options['numbersOnly'] || $options['numbersAndPeriodOnly']) {
 			return $value;
 		}
 		if (is_array($value)) {
