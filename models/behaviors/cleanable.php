@@ -275,6 +275,9 @@ class CleanableBehavior extends ModelBehavior{
 	* Clean the Data beforeSave
 	*/
 	public function beforeSave(&$Model) {
+		if (property_exists($Model, 'cleanable') && $Model->cleanable===false) {
+			return true;
+		}
 		$Model->data = $this->cleanData($Model, $Model->data);
 		return true;
 	}
