@@ -223,11 +223,15 @@ class CleanableBehavior extends ModelBehavior{
 		} elseif ($options['numbersAndPeriodOnly']) {
 			$value = preg_replace('/[^0-9\-\.]/is', '', $value);
 		}
-		if (empty($value) && $options['nullIfEmpty']) {
-			return null;
-		}
-		if (empty($value) && $options['zeroIfEmpty']) {
-			return 0;
+		if (empty($value)) {
+			if ($options['nullIfEmpty'] && $value!='0' && $value!==false) {
+				return null;
+			} elseif ($options['zeroIfEmpty']) {
+				return 0;
+			} elseif ($options['emptyStringIfNull']) {
+				return '';
+			}
+			return $value;
 		}
 		if (empty($value) || is_int($value) || is_float($value) || $options['numbersOnly'] || $options['numbersAndPeriodOnly']) {
 			return $value;
