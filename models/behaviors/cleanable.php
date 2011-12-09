@@ -228,7 +228,7 @@ class CleanableBehavior extends ModelBehavior{
 				return null;
 			} elseif ($options['zeroIfEmpty']) {
 				return 0;
-			} elseif ($options['emptyStringIfNull']) {
+			} elseif ($options['emptyStringIfNull'] && $value!='0') {
 				return '';
 			}
 			return $value;
