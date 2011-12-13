@@ -31,23 +31,23 @@ class CleanableBehavior extends ModelBehavior{
 		'body' => array('stripImages' => false, 'stripHtml' => false),
 		);
 	var $clean_default = array(
-		'ignore' => false, 
+		'ignore' => false,
 		'numbersOnly' => false,
 		'numbersAndPeriodOnly' => false,
 		'nullIfEmpty' => false,
 		'zeroIfEmpty' => false, #autoset if field!=null && type=int|float
 		'emptyStringIfNull' => false, #autoset if field!=null
-		'stripWhitespace' => true, 
-		'stripScripts' => true, 
-		'stripIframes' => true, 
-		'stripImages' => true, 
+		'stripWhitespace' => true,
+		'stripScripts' => true,
+		'stripIframes' => true,
+		'stripImages' => true,
 		'stripHtml' => true,
 		'clean' => true, #all options below are clean Options
-		'odd_spaces' => true, 
-		'dollar' => false, 
-		'carriage' => false, 
-		'unicode' => true, 
-		'escape' => false, 
+		'odd_spaces' => true,
+		'dollar' => false,
+		'carriage' => false,
+		'unicode' => true,
+		'escape' => false,
 		'backslash' => false,
 		# set to false, because it's too distructive
 		# use stripHtml instead
@@ -119,6 +119,12 @@ class CleanableBehavior extends ModelBehavior{
 		if (Set::countDim($data)==1) {
 			$coreData = array_merge($data, $coreData);
 			$data = array();
+		} elseif (!array_key_exists($Model->alias, $data)) {
+			foreach ( $data as $key => $val ) {
+				if (!is_array($val)) {
+					$coreData[$key] = $val;
+				}
+			}
 		}
 		$data[$Model->alias] = $coreData;
 		// reformat HABTM data so you can save via saveAll()
@@ -251,7 +257,7 @@ class CleanableBehavior extends ModelBehavior{
 		if (!class_exists('Sanitize')) {
 			App::import('Core', 'Sanitize');
 		}
-		// clean any " >" 
+		// clean any " >"
 		$value = preg_replace('#[\s\n\r\t]+>#', '>', $value);
 		if ($options['stripWhitespace']) {
 			$value = Sanitize::stripWhitespace($value);
