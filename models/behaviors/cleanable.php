@@ -22,8 +22,9 @@ class CleanableBehavior extends ModelBehavior{
 		'clean_string' => array(),
 		'clean_date' => array('nullIfEmpty' => true),
 		'clean_datetime' => array('nullIfEmpty' => true),
-		'clean_integer' => array('numbersOnly' => true),
-		'clean_float' => array('numbersAndPeriodOnly' => true),
+		'clean_integer' => array('numbersOnly' => true, 'zeroIfEmpty' => true),
+		'clean_float' => array('numbersAndPeriodOnly' => true, 'zeroIfEmpty' => true),
+		'clean_boolean' => array('zeroIfEmpty' => true),
 		// example of field name specific cleanup
 		'id' => array(),
 		'html' => array('stripImages' => false, 'stripHtml' => false),
@@ -34,7 +35,7 @@ class CleanableBehavior extends ModelBehavior{
 		'numbersOnly' => false,
 		'numbersAndPeriodOnly' => false,
 		'nullIfEmpty' => false,
-		'zeroIfEmpty' => false, #autoset if field!=null && type=int
+		'zeroIfEmpty' => false, #autoset if field!=null && type=int|float
 		'emptyStringIfNull' => false, #autoset if field!=null
 		'stripWhitespace' => true, 
 		'stripScripts' => true, 
@@ -195,7 +196,7 @@ class CleanableBehavior extends ModelBehavior{
 			}
 			if (array_key_exists('null', $schema[$field])) {
 				$options['emptyStringIfNull'] = empty($schema[$field]['null']);
-				if (array_key_exists('type', $schema[$field]) && $schema[$field]['type'] == 'integer') {
+				if (array_key_exists('type', $schema[$field]) && ($schema[$field]['type'] == 'integer' || $schema[$field]['type'] == 'float')) {
 					$options['zeroIfEmpty'] = true;
 				}
 			}
