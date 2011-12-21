@@ -180,6 +180,12 @@ class CleanableBehavior extends ModelBehavior{
 				$options = $this->determineCleanOptions($field, $settings, $schema);
 				$field = $this->doCleanValue($field, $settings['clean_default']);
 				$data[$field] = $this->doCleanValue($value, $options);
+				//Remove unnecessary fields
+				foreach ($data as $k => $v) {
+					if (is_int($k)) {
+						unset($data[$k]);
+					}
+				}
 			}
 		}
 		return $data;
