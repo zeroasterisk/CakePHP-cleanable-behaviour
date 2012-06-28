@@ -4,22 +4,52 @@
  * Helps to prevent XSS attacks (you can clean in the controller)
  * Helps reformat input data into saveable structures
  *
+ * This is intended as a pre-clean step before data validation
+ *
  * @author Alan Blount <alan@zeroasterisk.com>
  * @link https://github.com/zeroasterisk/CakePHP-cleanable-behaviour
  * @copyright (c) 2011 Alan Blount
  * @license MIT License - http://www.opensource.org/licenses/mit-license.php
  * @access public
+ *
+ * In a Model you can customize:
+ * public $cleanable = array(
+ *     'name' => array('stripHtml' => false),
+ *     'meta_title' => array('nullIfEmpty' => true, 'stripHtml' => false),
+ *     'some_id' => array('numbersOnly' => true, 'zeroIfEmpty' => true),
+ *     'some_uuid' => array('numbersOnly' => false, 'nullIfEmpty' => true),
+ *     'crazy_text' => array('ignore' => true), // ignore ALL cleanable on this field (no cleaning nor formatting)
+ *     'somewhat_crazy_text' => array('doFormat' => false), // will do cleaning, but not formatting
+ *     'slightly_crazy_text' => array('doClean' => false), // will do formatting, but not cleaning
+ *   );
+ *
+ * Formatting:
+ * restructures data array to properly "belong" to the parent model
+ * fixes hasAndBelongsToMany structure for saving
+ *
+ * Cleaning:
+ * Optionally strips out HTML/images/extra-spaces/unauthroized-characters/etc
+ * Optionally cleans up empty values to desired types (null/0/etc)
+ *
+ *
  */
 class CleanableBehavior extends ModelBehavior{
-	var $settings = array();
-	var $excludedKeys = array();
-	var $settings_default = array(
+	public $settings = array();
+	public $excludedKeys = array();
+	/**
+	 * These settings customize the defauls by field type
+	 * they are variations on the clean_defaults (below)
+	 * they can be over-ridden by custom settings on the model
+	 *
+	 * @var array
+	 */
+	public $settings_default = array(
 		'doClean' => true,
 		'doFormat' => true,
-		'clean_default' => array(), # will merge with $this->clean_default
+		'clean_default' => array(), // will merge with $this->clean_default
 		'clean_text' => array('stripImages' => false, 'stripHtml' => false),
 		'clean_blob' => array('stripImages' => false, 'stripHtml' => false),
-		'clean_string' => array(),
+		'clean_string' => array(), // defaults are used (below)
 		'clean_date' => array('nullIfEmpty' => true),
 		'clean_datetime' => array('nullIfEmpty' => true),
 		'clean_integer' => array('numbersOnly' => true, 'zeroIfEmpty' => true),
@@ -29,38 +59,48 @@ class CleanableBehavior extends ModelBehavior{
 		'id' => array(),
 		'html' => array('stripImages' => false, 'stripHtml' => false),
 		'body' => array('stripImages' => false, 'stripHtml' => false),
-		);
-	var $clean_default = array(
+	);
+	/**
+	 * These are the clean_defaults which are applied to all fields/data by default
+	 * they can be over-ridden by field type via settings_default (above)
+	 * and also by custom settings on the model
+	 *
+	 * @var array
+	 */
+	public $clean_default = array(
 		'ignore' => false,
+		// format & custom clean options
 		'numbersOnly' => false,
 		'numbersAndPeriodOnly' => false,
 		'nullIfEmpty' => false,
-		'zeroIfEmpty' => false, #autoset if field!=null && type=int|float
-		'emptyStringIfNull' => false, #autoset if field!=null
+		'zeroIfEmpty' => false, //autoset if field!=null && type=int|float
+		'emptyStringIfNull' => false, //autoset if field!=null
 		'stripWhitespace' => true,
 		'stripScripts' => true,
 		'stripIframes' => true,
 		'stripImages' => true,
 		'stripHtml' => true,
-		'clean' => true, #all options below are clean Options
+		// Sanitize::clean() options
+		'clean' => true, // do clean at all
 		'odd_spaces' => true,
 		'dollar' => false,
 		'carriage' => false,
 		'unicode' => true,
 		'escape' => false,
 		'backslash' => false,
-		# set to false, because it's too distructive
-		# use stripHtml instead
+		// set to false, because it's too distructive
+		// use stripHtml instead
 		'encode' => false,
 		'remove_html' => false,
-		);
+	);
 	/**
-	* Convenience function for coordinating the settings array
-	* @param object $Model
-	* @param array $settings
-	* @return bool
-	*/
-	function setup(&$Model, $settings = array()) {
+	 * Convenience function for coordinating the settings array
+	 *
+	 * @param object  $Model
+	 * @param array   $settings
+	 * @return bool
+	 */
+	public function setup(&$Model, $settings = array()) {
 		if (!isset($this->settings[$Model->alias])) {
 			$this->settings[$Model->alias] = $this->settings_default;
 		}
@@ -69,11 +109,12 @@ class CleanableBehavior extends ModelBehavior{
 		return true;
 	}
 	/**
-	* Convenience function for coordinating the settings array
-	* @param object $Model
-	* @param array $settings
-	* @return array $settings
-	*/
+	 * Convenience function for coordinating the settings array
+	 *
+	 * @param object  $Model
+	 * @param array   $settings
+	 * @return array $settings
+	 */
 	public function settings(&$Model, $settings = array()) {
 		$_settings = $this->settings[$Model->alias];
 		if (isset($Model->cleanable) && is_array($Model->cleanable)) {
@@ -83,12 +124,13 @@ class CleanableBehavior extends ModelBehavior{
 		return $settings;
 	}
 	/**
-	* Clean all the data/fields
-	* @param object $Model
-	* @param array $data
-	* @param array $settings
-	* @return array $data
-	*/
+	 * Clean all the data/fields
+	 *
+	 * @param object  $Model
+	 * @param array   $data
+	 * @param array   $settings
+	 * @return array $data
+	 */
 	public function cleanData(&$Model, $data, $settings=null) {
 		$settings = $this->settings($Model, $settings);
 		if ($settings['doFormat']) {
@@ -100,14 +142,15 @@ class CleanableBehavior extends ModelBehavior{
 		return $data;
 	}
 	/**
-	* This is all of the basic format functionality, split out for readability
-	* restructures data array to properly "belong" to the parent model
-	* fixes hasAndBelongsToMany structure for saving
-	* @param object $Model
-	* @param array $data
-	* @param array $settings
-	* @return array $data
-	*/
+	 * This is all of the basic format functionality, split out for readability
+	 * restructures data array to properly "belong" to the parent model
+	 * fixes hasAndBelongsToMany structure for saving
+	 *
+	 * @param object  $Model
+	 * @param array   $data
+	 * @param array   $settings
+	 * @return array $data
+	 */
 	public function doFormat(&$Model, $data, $settings=null) {
 		$settings = $this->settings($Model, $settings);
 		// shuffle core data to properly nest
@@ -144,12 +187,15 @@ class CleanableBehavior extends ModelBehavior{
 		return $data;
 	}
 	/**
-	* This is all of the basic cleanup functionality, split out for readability
-	* @param object $Model
-	* @param array $data
-	* @param array $settings
-	* @return array $data
-	*/
+	 * This is all of the basic cleanup functionality, split out for readability
+	 * Optionally strips out HTML/images/extra-spaces/unauthroized-characters/etc
+	 * Optionally cleans up empty values to desired types (null/0/etc)
+	 *
+	 * @param object  $Model
+	 * @param array   $data
+	 * @param array   $settings
+	 * @return array $data
+	 */
 	public function doClean(&$Model, $data, $settings=null) {
 		if (!is_array($data) || empty($data)) {
 			return $data;
@@ -191,12 +237,13 @@ class CleanableBehavior extends ModelBehavior{
 		return $data;
 	}
 	/**
-	* Determine options for doClean based on field/schema/settings
-	* @param string $field
-	* @param array $settings
-	* @param array $schema
-	* @return array $options
-	*/
+	 * Determine options for doClean based on field/schema/settings
+	 *
+	 * @param string  $field
+	 * @param array   $settings
+	 * @param array   $schema
+	 * @return array $options
+	 */
 	public function determineCleanOptions($field, $settings, $schema) {
 		$options = $settings['clean_default'];
 		if (array_key_exists($field, $schema) && is_array($schema[$field])) {
@@ -219,11 +266,12 @@ class CleanableBehavior extends ModelBehavior{
 		return $options;
 	}
 	/**
-	* Cleans any specific value based on options
-	* @param mixed $value
-	* @param array $options
-	* @return mixed $value
-	*/
+	 * Cleans any specific value based on options
+	 *
+	 * @param mixed   $value
+	 * @param array   $options
+	 * @return mixed $value
+	 */
 	public function doCleanValue($value, $options=array()) {
 		if (empty($options)) {
 			$options = $this->clean_default;
@@ -269,7 +317,7 @@ class CleanableBehavior extends ModelBehavior{
 			$value = Sanitize::stripWhitespace($value);
 		}
 		if ($options['stripScripts']) {
-			# not using Sanitize::stripScripts() because it's also stripping images
+			// not using Sanitize::stripScripts() because it's also stripping images
 			$value = preg_replace('/(<link[^>]+rel="[^"]*stylesheet"[^>]*>|<style="[^"]*")|<script[^>]*>.*?<\/script>|<style[^>]*>.*?<\/style>|<!--.*?-->/is', '', $value);
 		}
 		if ($options['stripIframes']) {
@@ -289,8 +337,8 @@ class CleanableBehavior extends ModelBehavior{
 		return $value;
 	}
 	/**
-	* Clean the Data beforeSave
-	*/
+	 * Clean the Data beforeSave
+	 */
 	public function beforeSave(&$Model) {
 		if (property_exists($Model, 'cleanable') && $Model->cleanable===false) {
 			return true;
