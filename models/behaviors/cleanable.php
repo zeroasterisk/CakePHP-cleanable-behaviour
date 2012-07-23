@@ -203,7 +203,12 @@ class CleanableBehavior extends ModelBehavior{
 		$settings = $this->settings($Model, $settings);
 		$schema = $Model->schema();
 		foreach ( $data as $modelName => $_data ) {
-			if ($modelName==$Model->alias) {
+			if (is_numeric($modelName)) {
+				// HABTM can return values like this
+				// for now, we are going to ignore them...
+				continue;
+			}
+			if ($modelName===$Model->alias) {
 				// clean on this models (main functionality)
 				$data[$modelName] = $this->doClean($Model, $_data, $settings);
 			} elseif (isset($Model->$modelName) && is_object($Model->$modelName) && is_array($_data)) {
@@ -228,7 +233,7 @@ class CleanableBehavior extends ModelBehavior{
 				$data[$field] = $this->doCleanValue($value, $options);
 				//Remove unnecessary fields
 				foreach ($data as $k => $v) {
-					if (is_int($k)) {
+					if (is_int($k) || empty($k)) {
 						unset($data[$k]);
 					}
 				}
