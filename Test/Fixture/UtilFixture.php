@@ -7,7 +7,6 @@ class UtilFixture extends CakeTestFixture {
  * @var string
  * @access public
  */
-	public $name = 'Util';
 
 /**
  * Fields

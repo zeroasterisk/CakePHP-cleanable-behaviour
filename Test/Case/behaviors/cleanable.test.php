@@ -30,7 +30,7 @@ class CleanableTestCase extends AppTestCase {
 					),
 				),
 			));
-		$this->Util->Behaviors->attach('Cleanable.Cleanable');
+		$this->Util->Behaviors->load('Cleanable.Cleanable');
 	}
 	/**
 	* End Test callback

@@ -314,7 +314,7 @@ class CleanableBehavior extends ModelBehavior{
 		$value = trim(urldecode(trim($value)));
 		$value = str_replace('[|#|#plus#|#|]', '+', $value);
 		if (!class_exists('Sanitize')) {
-			App::import('Core', 'Sanitize');
+			App::uses('Sanitize', 'Utility');
 		}
 		// clean any " >"
 		$value = preg_replace('#[\s\n\r\t]+>#', '>', $value);
