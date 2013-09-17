@@ -34,12 +34,12 @@
  *
  */
 class CleanableBehavior extends ModelBehavior{
-	public $settings = array();
+	public $config = array();
 	public $excludedKeys = array();
 	/**
-	 * These settings customize the defauls by field type
+	 * These config customize the defauls by field type
 	 * they are variations on the clean_defaults (below)
-	 * they can be over-ridden by custom settings on the model
+	 * they can be over-ridden by custom config on the model
 	 *
 	 * @var array
 	 */
@@ -63,7 +63,7 @@ class CleanableBehavior extends ModelBehavior{
 	/**
 	 * These are the clean_defaults which are applied to all fields/data by default
 	 * they can be over-ridden by field type via settings_default (above)
-	 * and also by custom settings on the model
+	 * and also by custom config on the model
 	 *
 	 * @var array
 	 */
@@ -94,50 +94,50 @@ class CleanableBehavior extends ModelBehavior{
 		'remove_html' => false,
 	);
 	/**
-	 * Convenience function for coordinating the settings array
+	 * Convenience function for coordinating the config array
 	 *
 	 * @param object  $Model
-	 * @param array   $settings
+	 * @param array   $config
 	 * @return bool
 	 */
-	public function setup(&$Model, $settings = array()) {
-		if (!isset($this->settings[$Model->alias])) {
-			$this->settings[$Model->alias] = $this->settings_default;
+	public function setup(Model $Model, $config = array()) {
+		if (!isset($this->config[$Model->alias])) {
+			$this->config[$Model->alias] = $this->settings_default;
 		}
-		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array) $settings);
-		$this->settings[$Model->alias]['clean_default'] = array_merge($this->settings[$Model->alias]['clean_default'], $this->clean_default);
+		$this->config[$Model->alias] = array_merge($this->config[$Model->alias], (array) $config);
+		$this->config[$Model->alias]['clean_default'] = array_merge($this->config[$Model->alias]['clean_default'], $this->clean_default);
 		return true;
 	}
 	/**
-	 * Convenience function for coordinating the settings array
+	 * Convenience function for coordinating the config array
 	 *
 	 * @param object  $Model
-	 * @param array   $settings
-	 * @return array $settings
+	 * @param array   $config
+	 * @return array $config
 	 */
-	public function settings(&$Model, $settings = array()) {
-		$_settings = $this->settings[$Model->alias];
+	public function config(&$Model, $config = array()) {
+		$_settings = $this->config[$Model->alias];
 		if (isset($Model->cleanable) && is_array($Model->cleanable)) {
 			$_settings = array_merge($_settings, $Model->cleanable);
 		}
-		$settings = array_merge($_settings, (array) $settings);
-		return $settings;
+		$config = array_merge($_settings, (array) $config);
+		return $config;
 	}
 	/**
 	 * Clean all the data/fields
 	 *
 	 * @param object  $Model
 	 * @param array   $data
-	 * @param array   $settings
+	 * @param array   $config
 	 * @return array $data
 	 */
-	public function cleanData(&$Model, $data, $settings=null) {
-		$settings = $this->settings($Model, $settings);
-		if ($settings['doFormat']) {
-			$data = $this->doFormat($Model, $data, $settings);
+	public function cleanData(&$Model, $data, $config=null) {
+		$config = $this->config($Model, $config);
+		if ($config['doFormat']) {
+			$data = $this->doFormat($Model, $data, $config);
 		}
-		if ($settings['doClean']) {
-			$data = $this->doClean($Model, $data, $settings);
+		if ($config['doClean']) {
+			$data = $this->doClean($Model, $data, $config);
 		}
 		return $data;
 	}
@@ -148,11 +148,11 @@ class CleanableBehavior extends ModelBehavior{
 	 *
 	 * @param object  $Model
 	 * @param array   $data
-	 * @param array   $settings
+	 * @param array   $config
 	 * @return array $data
 	 */
-	public function doFormat(&$Model, $data, $settings=null) {
-		$settings = $this->settings($Model, $settings);
+	public function doFormat(&$Model, $data, $config=null) {
+		$config = $this->config($Model, $config);
 		// shuffle core data to properly nest
 		$coreData = array();
 		if (array_key_exists($Model->alias, $data)) {
@@ -193,14 +193,14 @@ class CleanableBehavior extends ModelBehavior{
 	 *
 	 * @param object  $Model
 	 * @param array   $data
-	 * @param array   $settings
+	 * @param array   $config
 	 * @return array $data
 	 */
-	public function doClean(&$Model, $data, $settings=null) {
+	public function doClean(&$Model, $data, $config=null) {
 		if (!is_array($data) || empty($data)) {
 			return $data;
 		}
-		$settings = $this->settings($Model, $settings);
+		$config = $this->config($Model, $config);
 		$schema = $Model->schema();
 		foreach ( $data as $modelName => $_data ) {
 			if (is_numeric($modelName)) {
@@ -210,16 +210,16 @@ class CleanableBehavior extends ModelBehavior{
 			}
 			if ($modelName===$Model->alias) {
 				// clean on this models (main functionality)
-				$data[$modelName] = $this->doClean($Model, $_data, $settings);
+				$data[$modelName] = $this->doClean($Model, $_data, $config);
 			} elseif (isset($Model->$modelName) && is_object($Model->$modelName) && is_array($_data)) {
 				// clean on other models
-				$data[$modelName] = $this->doClean($Model->$modelName, $_data, $settings);
+				$data[$modelName] = $this->doClean($Model->$modelName, $_data, $config);
 			} elseif (is_array($_data)) {
 				// clean on nested data as arrays
 				foreach ( $_data as $field => $value ) {
 					unset($_data[$field]);
-					$options = $this->determineCleanOptions($field, $settings, $schema);
-					$field = $this->doCleanValue($field, $settings['clean_default']);
+					$options = $this->determineCleanOptions($field, $config, $schema);
+					$field = $this->doCleanValue($field, $config['clean_default']);
 					$_data[$field] = $this->doCleanValue($value, $options);
 				}
 				$data[$modelName] = $_data;
@@ -228,8 +228,8 @@ class CleanableBehavior extends ModelBehavior{
 				$field = $modelName;
 				$value = $_data;
 				unset($data[$field]);
-				$options = $this->determineCleanOptions($field, $settings, $schema);
-				$field = $this->doCleanValue($field, $settings['clean_default']);
+				$options = $this->determineCleanOptions($field, $config, $schema);
+				$field = $this->doCleanValue($field, $config['clean_default']);
 				$data[$field] = $this->doCleanValue($value, $options);
 				//Remove unnecessary fields
 				foreach ($data as $k => $v) {
@@ -242,20 +242,20 @@ class CleanableBehavior extends ModelBehavior{
 		return $data;
 	}
 	/**
-	 * Determine options for doClean based on field/schema/settings
+	 * Determine options for doClean based on field/schema/config
 	 *
 	 * @param string  $field
-	 * @param array   $settings
+	 * @param array   $config
 	 * @param array   $schema
 	 * @return array $options
 	 */
-	public function determineCleanOptions($field, $settings, $schema) {
-		$options = $settings['clean_default'];
+	public function determineCleanOptions($field, $config, $schema) {
+		$options = $config['clean_default'];
 		if (array_key_exists($field, $schema) && is_array($schema[$field])) {
 			if (array_key_exists('type', $schema[$field])) {
 				$clean_type = "clean_{$schema[$field]['type']}";
-				if (array_key_exists($clean_type, $settings) && is_array($settings[$clean_type])) {
-					$options = array_merge($options, $settings[$clean_type]);
+				if (array_key_exists($clean_type, $config) && is_array($config[$clean_type])) {
+					$options = array_merge($options, $config[$clean_type]);
 				}
 			}
 			if (array_key_exists('null', $schema[$field])) {
@@ -265,8 +265,8 @@ class CleanableBehavior extends ModelBehavior{
 				}
 			}
 		}
-		if (array_key_exists($field, $settings) && is_array($settings[$field])) {
-			$options = array_merge($options, $settings[$field]);
+		if (array_key_exists($field, $config) && is_array($config[$field])) {
+			$options = array_merge($options, $config[$field]);
 		}
 		return $options;
 	}
@@ -344,7 +344,7 @@ class CleanableBehavior extends ModelBehavior{
 	/**
 	 * Clean the Data beforeSave
 	 */
-	public function beforeSave(&$Model) {
+	public function beforeSave(Model $Model, $options = array()) {
 		if (property_exists($Model, 'cleanable') && $Model->cleanable===false) {
 			return true;
 		}
