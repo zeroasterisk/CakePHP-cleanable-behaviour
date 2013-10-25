@@ -155,6 +155,9 @@ class CleanableBehavior extends ModelBehavior{
 		$config = $this->config($Model, $config);
 		// shuffle core data to properly nest
 		$coreData = array();
+		if (empty($data)) {
+			$data = array();
+		}
 		if (array_key_exists($Model->alias, $data)) {
 			$coreData = $data[$Model->alias];
 			unset($data[$Model->alias]);
@@ -352,4 +355,3 @@ class CleanableBehavior extends ModelBehavior{
 		return true;
 	}
 }
-?>
