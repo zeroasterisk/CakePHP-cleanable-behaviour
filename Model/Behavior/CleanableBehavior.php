@@ -254,7 +254,7 @@ class CleanableBehavior extends ModelBehavior{
 	 */
 	public function determineCleanOptions($field, $config, $schema) {
 		$options = $config['clean_default'];
-		if (array_key_exists($field, $schema) && is_array($schema[$field])) {
+		if (!empty($schema) && array_key_exists($field, $schema) && is_array($schema[$field])) {
 			if (array_key_exists('type', $schema[$field])) {
 				$clean_type = "clean_{$schema[$field]['type']}";
 				if (array_key_exists($clean_type, $config) && is_array($config[$clean_type])) {
