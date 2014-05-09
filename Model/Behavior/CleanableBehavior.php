@@ -336,7 +336,7 @@ class CleanableBehavior extends ModelBehavior{
 			$value = Sanitize::stripImages($value);
 		}
 		if ($options['stripHtml']) {
-			$value = preg_replace('/<[^>]*?>.*?<\/[^>]*?>/is', '', $value);
+			$value = preg_replace('/<[^>]*?>(.*?)<\/[^>]*?>/is', '$1', $value);
 			$value = preg_replace('/<[^>]*?>/is', '', $value);
 		}
 		if ($options['clean']) {
